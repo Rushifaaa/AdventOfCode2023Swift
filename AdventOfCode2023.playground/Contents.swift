@@ -3,16 +3,25 @@ import RegexBuilder
 
 var dayOneInputOne: String = ""
 var dayOneInputTwo: String = ""
+var dayTwoInputOne: String = ""
 
-if let filepath = Bundle.main.path(forResource: "dayOneInputOne", ofType: "txt") {
+if let filepath = Bundle.main.path(forResource: "DayOne/dayOneInputOne", ofType: "txt") {
     do {
         dayOneInputOne = try String(contentsOfFile: filepath)
     }
 }
 
-if let filepath = Bundle.main.path(forResource: "dayOneInputTwo", ofType: "txt") {
+if let filepath = Bundle.main.path(forResource: "DayOne/dayOneInputTwo", ofType: "txt") {
     do {
         dayOneInputTwo = try String(contentsOfFile: filepath)
+    }
+}
+
+if let filepath = Bundle.main.path(forResource: "DayTwo/inputOne", ofType: "txt") {
+    do {
+        dayTwoInputOne = try String(contentsOfFile: filepath)
+    } catch {
+        print(error)
     }
 }
 
@@ -44,7 +53,6 @@ func dayOneOutputTwo() -> Int {
         "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
         "six": 6, "seven": 7, "eight": 8, "nine": 9
     ]
-    let testKeys = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
 
     var allNumbers = [Int]()
     var lines = dayOneInputTwo.split(whereSeparator: \.isNewline)
@@ -56,11 +64,11 @@ func dayOneOutputTwo() -> Int {
         let wordsToFind = mapping.keys.joined(separator: "|") + "|[0-9]"
         let pattern = try! NSRegularExpression(pattern: wordsToFind, options: [])
         let matches = pattern.matches(in: String(line), options: [], range: NSRange(location: 0, length: line.utf16.count))
-        
+
         let matchedStrings = matches.map { match in
             (line as NSString).substring(with: match.range)
         }
-        
+
         // Checking String reversed so I can get "one" out of "twone" (example)
         let reversedInput = String(line).reversed()
         let reversedWordsToFind = mapping.keys.map { $0.reversed() }.joined(separator: "|") + "|[0-9]"
@@ -70,34 +78,82 @@ func dayOneOutputTwo() -> Int {
         let reverseMatchedStrings = reversedMatches.map { match in
             (String(reversedInput) as NSString).substring(with: match.range)
         }
-        
+
         let firstMatched = matchedStrings.first
         let lastMatched = reverseMatchedStrings.first
-        
+
         guard let firstMatched, let lastMatched else { return }
-        
+
         if let mappedFirstMatch = mapping[firstMatched] {
             firstNumber = mappedFirstMatch
         } else if let mappedFirstMatch = Int(firstMatched) {
             firstNumber = mappedFirstMatch
         }
-        
+
         if let mappedLastMatch = mapping[String(lastMatched.reversed())] {
             lastNumber = mappedLastMatch
         } else if let mappedLastMatch = Int(lastMatched) {
             lastNumber = mappedLastMatch
         }
-        
+
         let finalNumber = String(firstNumber) + String(lastNumber)
 
         if let finalNumber = Int(finalNumber), finalNumber > 0 {
             allNumbers.append(finalNumber)
         }
     }
-    
-    print(allNumbers)
+
     return allNumbers.reduce(0) { $0 + $1 }
 }
 
-print("Day One: Part One", dayOneOutputOne())
-print("Day One: Part Two", dayOneOutputTwo())
+func dayTwoOutputOne() {
+    var lines = dayTwoInputOne.split(whereSeparator: \.isNewline)
+    var games: [Int: Bool] = [:]
+
+    lines.forEach { line in
+        let splitedGame = line.split(separator: ":")
+        let gameId = splitedGame.first?.split(whereSeparator: \.isWhitespace).last
+        let gameSets = splitedGame.last?.split(separator: ";")
+        var gamePossibility = true
+        
+        gameSets?.forEach { gameSet in
+            var colorSets = gameSet.split(separator: ",")
+
+            var test = [
+                "blue": 0,
+                "red": 0,
+                "green": 0,
+            ]
+
+            colorSets.forEach { colorSet in
+                let splitedColorSet = colorSet.split(whereSeparator: \.isWhitespace)
+
+                guard let colorName = splitedColorSet.last,
+                      let colorCount = splitedColorSet.first,
+                      let numericColorCount = Int(colorCount) else { return }
+                
+                switch colorName {
+                case "green":
+                    gamePossibility = gamePossibility && numericColorCount <= 13
+                case "blue":
+                    gamePossibility = gamePossibility && numericColorCount <= 14
+                case "red":
+                    gamePossibility = gamePossibility && numericColorCount <= 12
+                default:
+                    break
+                }
+            }
+        }
+        
+        guard let gameId, let numericGameId = Int(gameId) else { return }
+        games[numericGameId] = gamePossibility
+    }
+    
+    var idSum = games.reduce(0) { $1.value ? $0 + $1.key : $0 }
+    
+    print(idSum)
+}
+
+// print("Day One: Part One", dayOneOutputOne())
+// print("Day One: Part Two", dayOneOutputTwo())
+dayTwoOutputOne()
