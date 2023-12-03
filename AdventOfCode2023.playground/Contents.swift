@@ -109,6 +109,7 @@ func dayOneOutputTwo() -> Int {
 func dayTwoOutputOne() {
     var lines = dayTwoInputOne.split(whereSeparator: \.isNewline)
     var games: [Int: Bool] = [:]
+    var powerColorCounts = [Int]()
 
     lines.forEach { line in
         let splitedGame = line.split(separator: ":")
@@ -116,15 +117,13 @@ func dayTwoOutputOne() {
         let gameSets = splitedGame.last?.split(separator: ";")
         var gamePossibility = true
         
+        var greenCount = 0
+        var redCount = 0
+        var blueCount = 0
+        
         gameSets?.forEach { gameSet in
             var colorSets = gameSet.split(separator: ",")
-
-            var test = [
-                "blue": 0,
-                "red": 0,
-                "green": 0,
-            ]
-
+            
             colorSets.forEach { colorSet in
                 let splitedColorSet = colorSet.split(whereSeparator: \.isWhitespace)
 
@@ -135,10 +134,13 @@ func dayTwoOutputOne() {
                 switch colorName {
                 case "green":
                     gamePossibility = gamePossibility && numericColorCount <= 13
+                    greenCount = greenCount < numericColorCount ? numericColorCount : greenCount
                 case "blue":
                     gamePossibility = gamePossibility && numericColorCount <= 14
+                    blueCount = blueCount < numericColorCount ? numericColorCount : blueCount
                 case "red":
                     gamePossibility = gamePossibility && numericColorCount <= 12
+                    redCount = redCount < numericColorCount ? numericColorCount : redCount
                 default:
                     break
                 }
@@ -147,11 +149,12 @@ func dayTwoOutputOne() {
         
         guard let gameId, let numericGameId = Int(gameId) else { return }
         games[numericGameId] = gamePossibility
+        powerColorCounts.append(greenCount * redCount * blueCount)
     }
     
     var idSum = games.reduce(0) { $1.value ? $0 + $1.key : $0 }
-    
-    print(idSum)
+    var powerColorCountsSum = powerColorCounts.reduce(0) { $0 + $1 }
+    print(idSum, powerColorCountsSum)
 }
 
 // print("Day One: Part One", dayOneOutputOne())
